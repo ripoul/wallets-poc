@@ -44,7 +44,7 @@ def create_loyalty_class_if_missing(service, class_payload):
         # Essayer de récupérer la class (si existe)
         existing = service.loyaltyclass().get(resourceId=class_payload["id"]).execute()
         print("Classe exists:", class_payload["id"])
-        #existing = service.loyaltyclass().patch(resourceId=class_payload["id"], body=class_payload).execute()
+        existing = service.loyaltyclass().update(resourceId=class_payload["id"], body=class_payload).execute()
         return existing
     except Exception as e:
         # si n'existe pas -> créer
@@ -96,7 +96,7 @@ def build_class_payload(site):
         "logo": {
             "sourceUri": {"uri": site["logo_uri"]}
         },
-        "hexBackgroundColor": "#4285F4",   # couleur principale (exemple : bleu Google)
+        "hexBackgroundColor": "#3AC721",   # couleur principale (exemple : bleu Google)
         "heroImage": {  # image en haut de la carte (optionnelle mais recommandée)
             "sourceUri": {
                 "uri": site.get("hero_image_uri", site["logo_uri"])
@@ -123,8 +123,8 @@ def build_class_payload(site):
         ],
 
         # ✅ Informations sur le programme
-        "rewardsTier": "Membre",
-        "rewardsTierLabel": "Niveau",
+        #"rewardsTier": "Membre",
+        #"rewardsTierLabel": "Niveau",
         "reviewStatus": "underReview",  # "underReview" ou "approved" après validation Google
 
         # ✅ Configuration du barcode par défaut (si tu veux en générer pour tous les membres)
@@ -195,6 +195,35 @@ def build_class_payload(site):
             ]
         },
 
+        "classTemplateInfo": {
+            "cardTemplateOverride": {
+                "cardRowTemplateInfos": [
+                    {
+                        "twoItems": {
+                            "startItem": {
+                                "firstValue": {
+                                    "fields": [
+                                        {
+                                            "fieldPath": "object.textModulesData['points']"
+                                        }
+                                    ]
+                                }
+                            },
+                            "endItem": {
+                                "firstValue": {
+                                    "fields": [
+                                        {
+                                            "fieldPath": "object.textModulesData['vip']"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+
         # ✅ Type d’objet
         "kind": "walletobjects#loyaltyClass"
     }
@@ -213,6 +242,21 @@ def build_object_payload(site, user):
             "balance": {"string": str(user.get("points", 0))},
             "label": "Points"
         },
+        # Section personnalisée au-dessus du code-barres
+
+        "textModulesData": [
+            {
+                "id": "points",
+                "header": "Points",
+                "body": str(user.get("points", 0))
+            },
+            {
+                "id": "vip",
+                "header": "Pallier VIP",
+                "body": user.get("status", "")
+            }
+        ],
+
         # barcode si besoin
         "barcode": {
             "type": "qrCode",
@@ -242,7 +286,7 @@ def generate_save_url(object_id, class_id, issuer_id, private_key):
             ]
         }
     }
-    print("JWT payload:", json.dumps(payload))
+    #print("JWT payload:", json.dumps(payload))
     token = jwt.encode(payload, private_key, algorithm="RS256")
     return f"https://pay.google.com/gp/v/save/{token}"
 
@@ -259,11 +303,32 @@ def main():
     # Exemple : on boucle sur une liste d'utilisateurs à issuer
     users_for_sites = {
         "boutique-A": [
-            {"user_id": "u1001", "display_name": "Alice", "loyalty_number": "A1001", "points": 120},
-            {"user_id": "u1002", "display_name": "Bob", "loyalty_number": "A1002", "points": 30},
+            {
+                "user_id": "u1001",
+                "display_name": "Alice",
+                "loyalty_number": "A1001",
+                "points": 1300,
+                "status": "Gold",
+                "join_date": "12/03/2023"
+            },
+            {
+                "user_id": "u1002",
+                "display_name": "Bob",
+                "loyalty_number": "A1002",
+                "points": 30,
+                "status": "Bronze",
+                "join_date": "05/07/2022"
+            },
         ],
         "boutique-B": [
-            {"user_id": "u2001", "display_name": "Claire", "loyalty_number": "B2001", "points": 420},
+            {
+                "user_id": "u2001",
+                "display_name": "Claire",
+                "loyalty_number": "B2001",
+                "points": 420,
+                "status": "Platinum",
+                "join_date": "21/11/2021"
+            },
         ],
     }
 
@@ -272,7 +337,7 @@ def main():
         users = users_for_sites.get(key, [])
         for user in users:
             obj_payload = build_object_payload(site, user)
-            print("object payload:", json.dumps(obj_payload))
+            #print("object payload:", json.dumps(obj_payload))
             created_obj = create_loyalty_object(service, obj_payload)
             print("Created object:", created_obj.get("id"))
             # Générer le lien Add to Google Wallet pour cet utilisateur
