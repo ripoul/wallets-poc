@@ -216,3 +216,10 @@ __marimo__/
 .streamlit/secrets.toml
 
 service-account.json
+
+# Apple Wallet / Passbook files
+*.certSigningRequest
+*.p12
+*.cer
+*.pem
+*.pkpass

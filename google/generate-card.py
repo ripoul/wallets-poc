@@ -111,9 +111,6 @@ def build_class_payload(site):
             "uri": site.get("homepage_uri", "https://example.com"),
             "description": "Visitez notre boutique"
         },
-        "termsAndConditionsUri": {
-            "uri": site.get("terms_uri", "https://example.com/conditions")
-        },
         "messages": [  # message de bienvenue
             {
                 "header": "Bienvenue dans notre programme de fidélité !",
@@ -141,8 +138,8 @@ def build_class_payload(site):
         },
 
         # ✅ Format d’affichage du numéro de compte (personnalisable)
-        "accountNameLabel": "Nom du client",
-        "accountIdLabel": "Numéro de fidélité",
+        #"accountNameLabel": "Nom du client",
+        #"accountIdLabel": "Numéro de fidélité",
 
         # ✅ Localisation (si tu veux activer les notifications par proximité)
         "locations": [
@@ -167,13 +164,7 @@ def build_class_payload(site):
             ]
         },
 
-        # ✅ Templates d’affichage (optionnel mais utile pour personnaliser)
-        "cardTitle": {
-            "defaultValue": {"language": "fr", "value": site["site_name"]}
-        },
-        "header": {
-            "defaultValue": {"language": "fr", "value": "Programme de fidélité"}
-        },
+
         "localizedIssuerName": {
             "defaultValue": {
                 "language": "fr",
@@ -238,10 +229,10 @@ def build_object_payload(site, user):
         "state": "active",
         "accountId": user["loyalty_number"],
         "accountName": user.get("display_name", ""),
-        "loyaltyPoints": {
-            "balance": {"string": str(user.get("points", 0))},
-            "label": "Points"
-        },
+        #"loyaltyPoints": {
+        #    "balance": {"string": str(user.get("points", 0))},
+        #    "label": "Points"
+        #},
         # Section personnalisée au-dessus du code-barres
 
         "textModulesData": [
@@ -252,7 +243,7 @@ def build_object_payload(site, user):
             },
             {
                 "id": "vip",
-                "header": "Pallier VIP",
+                "header": "Pallier VIP baba",
                 "body": user.get("status", "")
             }
         ],

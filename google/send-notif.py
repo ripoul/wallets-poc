@@ -63,8 +63,9 @@ if __name__ == "__main__":
     #    message_header="TMP3 Nouveau bonus !",
     #    message_body="Vous avez reçu 50 points supplémentaires.",
     # )
-    send_class_notification(
-       class_id=f"{ISSUER_ID}.{CLASS_ID}",
-       message_header="Info programme 2",
-       message_body="Découvrez nos nouveaux avantages VIP !",
-    )
+    #send_class_notification(
+    #   class_id=f"{ISSUER_ID}.{CLASS_ID}",
+    #   message_header="Info programme 2",
+    #   message_body="Découvrez nos nouveaux avantages VIP !",
+    #)
+    pass
