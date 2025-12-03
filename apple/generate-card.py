@@ -7,6 +7,9 @@ import tempfile
 import subprocess
 from pathlib import Path
 import dotenv
+import httpx
+import random
+from datetime import datetime, timezone, timedelta
 
 dotenv.load_dotenv()
 
@@ -15,12 +18,16 @@ USER_ID = "3f5b1f18-a73b-4d91-8d18-96d0f489b1d5"
 # --- CONFIG ---
 PASS_JSON = {
     "formatVersion": 1,
-    "passTypeIdentifier": os.getenv("APPLE_PASS_TYPE_ID"),  # adapter
+    "passTypeIdentifier": os.getenv("APPLE_PASS_TYPE_ID"),
     "serialNumber": USER_ID,
     "organizationName": "Mon Organisation",
     "description": "Mon pass exemple",
     "logoText": "Mon Pass",
-    "teamIdentifier": os.getenv("APPLE_TEAM_ID"),  # adapter
+    "teamIdentifier": os.getenv("APPLE_TEAM_ID"),
+
+    # Ajoutez ces deux lignes :
+    "webServiceURL": f"{os.getenv('BASE_URL')}apple/webhook/",
+    "authenticationToken": "securetoken123456789", # 16 char minimum
 
 
     "logoText": "Carte Fidélité",
@@ -38,7 +45,7 @@ PASS_JSON = {
             {
                 "key": "points",
                 "label": "Points",
-                "value": 120
+                "value": random.randint(0, 1000)
             }
         ],
         "secondaryFields": [
@@ -62,9 +69,21 @@ PASS_JSON = {
                 "value": "Valable dans tous les magasins."
             }
         ]
-    }
+    },
+    "relevantDate": (datetime.now(timezone.utc) + timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "upcomingPassInformation": [
+        {
+            "identifier": "update1",
+            "isActive": True,
+            "name": "notif via upcomingPassInformation",
+            "type": "event",
+            "dateInformation": {
+                "date": (datetime.now(timezone.utc) + timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%SZ")
+            }
+        }
+    ]
 }
-IMAGES = ["imgs/icon.png", "imgs/icon@2x.png"]  # mettez ici vos images existantes
+IMAGES = ["imgs/icon.png", "imgs/icon@2x.png", "imgs/strip.png"]  # mettez ici vos images existantes
 OUTPUT_PKPASS = "monpass.pkpass"
 
 # chemins vers vos certificats (PEM) générés depuis le .p12
@@ -81,6 +100,43 @@ def sha1_of_file(path):
             h.update(chunk)
     return h.hexdigest()
 
+# Ajoutez ici vos traductions (clé = identifiant, valeur = traduction)
+I18N = {
+    "fr": {
+        "Points": "Points",
+        "Niveau": "Niveau",
+        "Membre": "Membre",
+        "Conditions": "Conditions",
+        "Valable dans tous les magasins.": "Valable dans tous les magasins.",
+        "Votre carte a été mise à jour !": "Votre carte a été mise à jour !",
+        "Carte Fidélité": "Carte Fidélité",
+        "Mon Organisation": "Mon Organisation",
+        "Mon pass exemple": "Mon pass exemple",
+        "Mon Pass": "Mon Pass",
+    },
+    "en": {
+        "Points": "Points",
+        "Niveau": "Tier",
+        "Membre": "Member",
+        "Conditions": "Terms",
+        "Valable dans tous les magasins.": "Valid in all stores.",
+        "Votre carte a été mise à jour !": "Your card has been updated!",
+        "Carte Fidélité": "Loyalty Card",
+        "Mon Organisation": "My Organization",
+        "Mon pass exemple": "My sample pass",
+        "Mon Pass": "My Pass",
+    }
+}
+
+def write_i18n_files(tmpdir):
+    for lang, translations in I18N.items():
+        lproj_dir = tmpdir / f"{lang}.lproj"
+        lproj_dir.mkdir(exist_ok=True)
+        strings_path = lproj_dir / "pass.strings"
+        with open(strings_path, "w", encoding="utf-16") as f:
+            for k, v in translations.items():
+                f.write(f'"{k}" = "{v}";\n')
+
 def make_pkpass():
     tmpdir = Path(tempfile.mkdtemp(prefix="passkit_"))
     try:
@@ -88,6 +144,9 @@ def make_pkpass():
         pass_json_path = tmpdir / "pass.json"
         with open(pass_json_path, "w", encoding="utf-8") as f:
             json.dump(PASS_JSON, f, ensure_ascii=False, indent=2)
+
+        # 1b) écrire les fichiers d'internationalisation
+        write_i18n_files(tmpdir)
 
         # 2) copier images
         for img in IMAGES:
@@ -98,9 +157,9 @@ def make_pkpass():
 
         # 3) générer manifest.json (SHA1 pour chaque fichier dans le dossier)
         manifest = {}
-        for p in tmpdir.iterdir():
+        for p in tmpdir.rglob("*"):
             if p.is_file():
-                manifest[p.name] = sha1_of_file(p)
+                manifest[str(p.relative_to(tmpdir))] = sha1_of_file(p)
 
         manifest_path = tmpdir / "manifest.json"
         with open(manifest_path, "w", encoding="utf-8") as f:
@@ -122,13 +181,42 @@ def make_pkpass():
 
         # 5) zipper tout en .pkpass
         with zipfile.ZipFile(OUTPUT_PKPASS, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-            for p in tmpdir.iterdir():
-                zf.write(p, arcname=p.name)
+            for p in tmpdir.rglob("*"):
+                if p.is_file():
+                    zf.write(p, arcname=p.relative_to(tmpdir))
         print(f"Créé: {OUTPUT_PKPASS}")
 
     finally:
         # nettoyage
         shutil.rmtree(tmpdir)
+    
+def push_update(push_token):
+    url = f"https://api.push.apple.com/3/device/{push_token}"
 
+    headers = {
+        "apns-topic": os.getenv("APPLE_PASS_TYPE_ID")  # Important pour un Wallet pass
+    }
+
+    with httpx.Client(http2=True, cert=(PASS_CERT_PEM, PASS_KEY_PEM)) as client:
+        response = client.post(url, headers=headers, json={
+            "aps": {
+                "content-available": 1,
+                "alert": {
+                    "title": "title notif 1",
+                    "body": "body notif 1"
+                }
+            }
+        })  # <-- body JSON vide
+        print(f"Push response status: {response.status_code}")
+        if response.status_code != 200:
+            print(f"Response body: {response.text}")
+
+        
 if __name__ == "__main__":
     make_pkpass()
+
+    #with open("registrations.json", "r") as f:
+    #    infos = json.load(f)
+    #    push_token = infos["pushToken"]
+
+    #    push_update(push_token)

@@ -19,9 +19,24 @@ You should now have the following files:
 
 ## Run it
 
+Run an ngrok on port 5000. Put the url of the ngrok in the .env as baseUrl.
+
+### Generate a card
+
 ```sh
 python -m venv venv
 source venv/bin/activate
 pip install -r req.txt
 python generate-card.py # will create a pkpass
+python app.py # start an flask server to host the card file
 ```
+
+### Update a card
+
+Just uncomment the update section of generate-card.py after someone installed the card.
+
+## Docs
+
+- [pass formating](https://developer.apple.com/library/archive/documentation/UserExperience/Conceptual/PassKit_PG/Creating.html)
+- [pass.json fields](https://developer.apple.com/documentation/walletpasses/pass)
+- [pkpass validator](https://pkpassvalidator.azurewebsites.net/)
