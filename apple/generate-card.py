@@ -215,8 +215,8 @@ def push_update(push_token):
 if __name__ == "__main__":
     make_pkpass()
 
-    #with open("registrations.json", "r") as f:
-    #    infos = json.load(f)
-    #    push_token = infos["pushToken"]
+    with open("registrations.json", "r") as f:
+        infos = json.load(f)
+        push_token = infos["pushToken"]
 
-    #    push_update(push_token)
+        push_update(push_token)
