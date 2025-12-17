@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Apple Developer account and an activated Pass Type ID (com.apple.pass.<your_id>).
+- Apple Developer account and an activated Pass Type ID (com.apple.pass.<your_id>). To create a pass type id go [here](https://developer.apple.com/account/resources/identifiers/) section `Pass Type Ids`
 - Pass signing certificate (issued by Apple) for your Pass Type ID, exported as .p12. [Create the certificate here](https://developer.apple.com/account/resources/certificates/list). To export as .p12, download the generated certificate and "install" it.
 - Export the .p12 to PEM format:
 ```sh
