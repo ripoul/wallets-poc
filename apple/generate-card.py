@@ -71,6 +71,13 @@ PASS_JSON = {
             }
         ]
     },
+    "locations": [
+        {
+            "latitude": 46.96574020385742,
+            "longitude": -1.3155150413513184,
+            "relevantText": "📍 Vous êtes près de notre boutique !"
+        }
+    ],
 }
 IMAGES = ["imgs/icon.png", "imgs/icon@2x.png", "imgs/strip.png"]  # mettez ici vos images existantes
 OUTPUT_PKPASS = "monpass.pkpass"
