@@ -45,7 +45,7 @@ PASS_JSON = {
             {
                 "key": "points",
                 "label": "Points",
-                "value": random.randint(0, 1000)
+                "value": random.randint(0, 1000),
             }
         ],
         "secondaryFields": [
@@ -64,24 +64,13 @@ PASS_JSON = {
         ],
         "backFields": [
             {
-                "key": "terms",
-                "label": "Conditions",
-                "value": "Valable dans tous les magasins."
+                "key": "internalMessage",
+                "label": "",
+                "value": "🎉 Offre spéciale : -20% ce week-end !",
+                "changeMessage": "%@"
             }
         ]
     },
-    "relevantDate": (datetime.now(timezone.utc) + timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-    "upcomingPassInformation": [
-        {
-            "identifier": "update1",
-            "isActive": True,
-            "name": "notif via upcomingPassInformation",
-            "type": "event",
-            "dateInformation": {
-                "date": (datetime.now(timezone.utc) + timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%SZ")
-            }
-        }
-    ]
 }
 IMAGES = ["imgs/icon.png", "imgs/icon@2x.png", "imgs/strip.png"]  # mettez ici vos images existantes
 OUTPUT_PKPASS = "monpass.pkpass"
@@ -113,6 +102,7 @@ I18N = {
         "Mon Organisation": "Mon Organisation",
         "Mon pass exemple": "Mon pass exemple",
         "Mon Pass": "Mon Pass",
+        "🎉 Offre spéciale : -20% ce week-end !": "🎉 Offre spéciale : -20% ce week-end !",
     },
     "en": {
         "Points": "Points",
@@ -125,6 +115,7 @@ I18N = {
         "Mon Organisation": "My Organization",
         "Mon pass exemple": "My sample pass",
         "Mon Pass": "My Pass",
+        "🎉 Offre spéciale : -20% ce week-end !": "🎉 Special offer: -20% this weekend!",
     }
 }
 

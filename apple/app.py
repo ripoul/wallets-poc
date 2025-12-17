@@ -1,4 +1,4 @@
-from flask import Flask, send_file, request, jsonify, abort
+from flask import Flask, send_file, request, jsonify, abort, redirect
 from datetime import datetime, timezone
 import json
 
@@ -48,6 +48,7 @@ def register_device(deviceLibraryIdentifier, passTypeIdentifier, serialNumber):
 def get_pass(passTypeIdentifier, serialNumber):
     check_auth()
     print(f"Getting pass for pass type {passTypeIdentifier} and serial number {serialNumber}")
+    return redirect(f"/pass")
     return send_file(
         'monpass.pkpass',
         mimetype='application/vnd.apple.pkpass',
